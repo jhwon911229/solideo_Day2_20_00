@@ -6,6 +6,14 @@
     <title>TripSync - 개인 맞춤형 여행 플래너</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet.js - 무료 오픈소스 지도 라이브러리 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Routing Machine - 경로 찾기 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
     <!-- 헤더 -->
@@ -112,7 +120,22 @@
 
                     <!-- 지도 패널 -->
                     <div class="map-panel">
-                        <div id="map" class="map"></div>
+                        <!-- 지도 제공자 선택 -->
+                        <div class="map-provider-selector">
+                            <button id="use-google-maps" class="provider-btn active">
+                                <i class="fas fa-map"></i> Google Maps
+                            </button>
+                            <button id="use-openstreetmap" class="provider-btn">
+                                <i class="fas fa-globe"></i> OpenStreetMap (무료)
+                            </button>
+                        </div>
+
+                        <div id="map" class="map">
+                            <div id="map-loading" class="map-loading">
+                                <div class="loader"></div>
+                                <p>지도를 로드하는 중...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -278,17 +301,36 @@
     <!-- 푸터 -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 TripSync. 개인 맞춤형 여행 플래너</p>
+            <p>&copy; 2025 TripSync. 개인 맞춤형 여행 플래너</p>
         </div>
     </footer>
 
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMGooquPgD4C4lNL9sEdKr--2DTCr8djk&libraries=places,geometry&callback=initMap" async defer></script>
+    <!-- Google Maps API 에러 처리 -->
+    <script>
+        // Google Maps API 로드 에러 처리
+        function gm_authFailure() {
+            console.error('Google Maps API 인증 실패');
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px; text-align: center; background: #f3f4f6;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;"></i>
+                        <h3 style="color: #1f2937; margin-bottom: 10px;">Google Maps API 연결 오류</h3>
+                        <p style="color: #6b7280;">API 키를 확인하거나 페이지를 새로고침해주세요.</p>
+                    </div>
+                `;
+            }
+        }
+        window.gm_authFailure = gm_authFailure;
+    </script>
 
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- App JavaScript -->
     <script src="app.js"></script>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMGooquPgD4C4lNL9sEdKr--2DTCr8djk&libraries=places,geometry&callback=initMap" async defer onerror="gm_authFailure()"></script>
 </body>
 </html>
