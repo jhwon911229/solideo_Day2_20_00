@@ -245,84 +245,11 @@ body {
     box-shadow: var(--shadow-lg);
     overflow: hidden;
     height: 700px;
-    position: relative;
-}
-
-/* 지도 제공자 선택 */
-.map-provider-selector {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 1000;
-    display: flex;
-    gap: 10px;
-    background: var(--white);
-    padding: 8px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-}
-
-.provider-btn {
-    padding: 8px 16px;
-    background: var(--white);
-    border: 2px solid var(--light-gray);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--gray);
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.provider-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.provider-btn.active {
-    background: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
 }
 
 .map {
     width: 100%;
     height: 100%;
-    position: relative;
-}
-
-/* 지도 로딩 */
-.map-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: var(--white);
-    z-index: 10;
-}
-
-.loader {
-    width: 60px;
-    height: 60px;
-    border: 6px solid var(--light-gray);
-    border-top: 6px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-}
-
-.map-loading p {
-    color: var(--gray);
-    font-size: 1rem;
-    font-weight: 500;
 }
 
 /* 추천 탭 */
