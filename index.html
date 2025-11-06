@@ -6,6 +6,14 @@
     <title>TripSync - 개인 맞춤형 여행 플래너</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet.js - 무료 오픈소스 지도 라이브러리 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Routing Machine - 경로 찾기 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
     <!-- 헤더 -->
@@ -112,10 +120,20 @@
 
                     <!-- 지도 패널 -->
                     <div class="map-panel">
+                        <!-- 지도 제공자 선택 -->
+                        <div class="map-provider-selector">
+                            <button id="use-google-maps" class="provider-btn active">
+                                <i class="fas fa-map"></i> Google Maps
+                            </button>
+                            <button id="use-openstreetmap" class="provider-btn">
+                                <i class="fas fa-globe"></i> OpenStreetMap (무료)
+                            </button>
+                        </div>
+
                         <div id="map" class="map">
                             <div id="map-loading" class="map-loading">
                                 <div class="loader"></div>
-                                <p>구글맵스를 로드하는 중...</p>
+                                <p>지도를 로드하는 중...</p>
                             </div>
                         </div>
                     </div>
@@ -283,7 +301,7 @@
     <!-- 푸터 -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 TripSync. 개인 맞춤형 여행 플래너</p>
+            <p>&copy; 2025 TripSync. 개인 맞춤형 여행 플래너</p>
         </div>
     </footer>
 
