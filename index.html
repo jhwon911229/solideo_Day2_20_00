@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripSync - 개인 맞춤형 여행 플래너</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-plane-departure"></i>
+                <h1>TripSync</h1>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="planner">
+                    <i class="fas fa-route"></i> 여행 계획
+                </button>
+                <button class="nav-btn" data-tab="recommendations">
+                    <i class="fas fa-star"></i> 추천
+                </button>
+                <button class="nav-btn" data-tab="budget">
+                    <i class="fas fa-wallet"></i> 예산 관리
+                </button>
+                <button class="nav-btn" data-tab="summary">
+                    <i class="fas fa-chart-bar"></i> 일정 요약
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        <!-- 여행 계획 탭 -->
+        <section id="planner" class="tab-content active">
+            <div class="container">
+                <div class="planner-grid">
+                    <!-- 입력 패널 -->
+                    <div class="input-panel">
+                        <h2><i class="fas fa-map-marked-alt"></i> 여행 정보 입력</h2>
+
+                        <div class="form-group">
+                            <label for="departure">
+                                <i class="fas fa-map-marker-alt"></i> 출발지
+                            </label>
+                            <input type="text" id="departure" placeholder="예: 서울역" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="destination">
+                                <i class="fas fa-flag-checkered"></i> 목적지
+                            </label>
+                            <input type="text" id="destination" placeholder="예: 부산 해운대" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="departure-date">
+                                <i class="fas fa-calendar"></i> 출발 날짜
+                            </label>
+                            <input type="datetime-local" id="departure-date" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration">
+                                <i class="fas fa-clock"></i> 여행 기간 (일)
+                            </label>
+                            <input type="number" id="duration" min="1" max="30" value="3" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="budget">
+                                <i class="fas fa-won-sign"></i> 예산 (원)
+                            </label>
+                            <input type="number" id="budget" min="0" step="10000" placeholder="500000" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="transport-mode">
+                                <i class="fas fa-bus"></i> 교통 수단
+                            </label>
+                            <select id="transport-mode">
+                                <option value="DRIVING">자동차</option>
+                                <option value="TRANSIT">대중교통</option>
+                                <option value="WALKING">도보</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-primary" id="search-route">
+                            <i class="fas fa-search"></i> 경로 찾기
+                        </button>
+
+                        <!-- 경로 정보 표시 -->
+                        <div id="route-info" class="route-info" style="display: none;">
+                            <h3><i class="fas fa-info-circle"></i> 경로 정보</h3>
+                            <div class="info-item">
+                                <span class="label">거리:</span>
+                                <span id="distance" class="value">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">소요 시간:</span>
+                                <span id="duration-display" class="value">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">예상 비용:</span>
+                                <span id="estimated-cost" class="value">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 지도 패널 -->
+                    <div class="map-panel">
+                        <div id="map" class="map"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 추천 탭 -->
+        <section id="recommendations" class="tab-content">
+            <div class="container">
+                <h2><i class="fas fa-star"></i> 개인 맞춤 추천</h2>
+
+                <div class="recommendation-filters">
+                    <button class="filter-btn active" data-filter="all">전체</button>
+                    <button class="filter-btn" data-filter="tourist">관광지</button>
+                    <button class="filter-btn" data-filter="restaurant">맛집</button>
+                    <button class="filter-btn" data-filter="accommodation">숙소</button>
+                </div>
+
+                <div id="recommendations-list" class="recommendations-grid">
+                    <div class="recommendation-card">
+                        <div class="card-image">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>경로를 먼저 검색해주세요</h3>
+                            <p>출발지와 목적지를 입력하고 경로를 검색하면 주변 추천 장소를 제공합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 예산 관리 탭 -->
+        <section id="budget" class="tab-content">
+            <div class="container">
+                <h2><i class="fas fa-wallet"></i> 예산 관리</h2>
+
+                <div class="budget-overview">
+                    <div class="budget-card">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div class="budget-info">
+                            <span class="budget-label">총 예산</span>
+                            <span class="budget-value" id="total-budget">0원</span>
+                        </div>
+                    </div>
+                    <div class="budget-card">
+                        <i class="fas fa-calculator"></i>
+                        <div class="budget-info">
+                            <span class="budget-label">예상 지출</span>
+                            <span class="budget-value" id="estimated-spending">0원</span>
+                        </div>
+                    </div>
+                    <div class="budget-card">
+                        <i class="fas fa-piggy-bank"></i>
+                        <div class="budget-info">
+                            <span class="budget-label">남은 예산</span>
+                            <span class="budget-value" id="remaining-budget">0원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="budget-breakdown">
+                    <h3>예산 분배</h3>
+                    <div class="budget-chart">
+                        <canvas id="budget-chart"></canvas>
+                    </div>
+                    <div class="budget-items">
+                        <div class="budget-item">
+                            <div class="item-header">
+                                <span><i class="fas fa-bus"></i> 교통비</span>
+                                <span id="transport-cost">0원</span>
+                            </div>
+                            <input type="range" id="transport-slider" min="0" max="100" value="30" class="budget-slider">
+                        </div>
+                        <div class="budget-item">
+                            <div class="item-header">
+                                <span><i class="fas fa-bed"></i> 숙박비</span>
+                                <span id="accommodation-cost">0원</span>
+                            </div>
+                            <input type="range" id="accommodation-slider" min="0" max="100" value="40" class="budget-slider">
+                        </div>
+                        <div class="budget-item">
+                            <div class="item-header">
+                                <span><i class="fas fa-utensils"></i> 식비</span>
+                                <span id="food-cost">0원</span>
+                            </div>
+                            <input type="range" id="food-slider" min="0" max="100" value="20" class="budget-slider">
+                        </div>
+                        <div class="budget-item">
+                            <div class="item-header">
+                                <span><i class="fas fa-ticket-alt"></i> 관광/활동</span>
+                                <span id="activity-cost">0원</span>
+                            </div>
+                            <input type="range" id="activity-slider" min="0" max="100" value="10" class="budget-slider">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 일정 요약 탭 -->
+        <section id="summary" class="tab-content">
+            <div class="container">
+                <h2><i class="fas fa-chart-bar"></i> 일정 요약</h2>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <i class="fas fa-route"></i>
+                        <h3>여행 경로</h3>
+                        <div id="summary-route" class="summary-content">
+                            경로를 검색해주세요
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <i class="fas fa-clock"></i>
+                        <h3>시간 정보</h3>
+                        <div id="summary-time" class="summary-content">
+                            <div class="summary-item">
+                                <span>여행 기간:</span>
+                                <span id="summary-duration">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>이동 시간:</span>
+                                <span id="summary-travel-time">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <i class="fas fa-money-check-alt"></i>
+                        <h3>비용 정보</h3>
+                        <div id="summary-cost" class="summary-content">
+                            <div class="summary-item">
+                                <span>총 예산:</span>
+                                <span id="summary-total-budget">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>예상 지출:</span>
+                                <span id="summary-estimated">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>추천 장소</h3>
+                        <div id="summary-places" class="summary-content">
+                            추천 장소가 없습니다
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-section">
+                    <h3>경로 비교</h3>
+                    <div class="comparison-chart">
+                        <canvas id="comparison-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 TripSync. 개인 맞춤형 여행 플래너</p>
+        </div>
+    </footer>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMGooquPgD4C4lNL9sEdKr--2DTCr8djk&libraries=places,geometry&callback=initMap" async defer></script>
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- App JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
