@@ -116,6 +116,17 @@
                                 <span id="estimated-cost" class="value">-</span>
                             </div>
                         </div>
+
+                        <!-- 내비게이션 안내 -->
+                        <div id="navigation-panel" class="navigation-panel" style="display: none;">
+                            <h3><i class="fas fa-directions"></i> 길 안내</h3>
+                            <div id="navigation-steps" class="navigation-steps">
+                                <!-- 단계별 안내가 여기에 표시됩니다 -->
+                            </div>
+                            <button id="pay-transport" class="btn-pay" style="display: none;">
+                                <i class="fas fa-credit-card"></i> 교통비 결제
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 지도 패널 -->
@@ -292,6 +303,9 @@
 
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Toss Payments SDK -->
+    <script src="https://js.tosspayments.com/v1/payment-widget"></script>
 
     <!-- App JavaScript -->
     <script src="app.js"></script>
