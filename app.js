@@ -29,32 +29,85 @@ const appData = {
 
 // Google Maps 초기화
 function initMap() {
-    // 맵 초기화 (서울 중심)
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 37.5665, lng: 126.9780 },
-        zoom: 12,
-        mapTypeControl: true,
-        fullscreenControl: true,
-        streetViewControl: false
-    });
+    try {
+        console.log('Google Maps 초기화 시작...');
 
-    // 서비스 초기화
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: false
-    });
-    placesService = new google.maps.places.PlacesService(map);
-    geocoder = new google.maps.Geocoder();
+        // 맵 컨테이너 확인
+        const mapElement = document.getElementById('map');
+        if (!mapElement) {
+            console.error('지도 컨테이너를 찾을 수 없습니다.');
+            return;
+        }
 
-    // 이벤트 리스너 설정
-    setupEventListeners();
+        // 맵 초기화 (서울 중심)
+        map = new google.maps.Map(mapElement, {
+            center: { lat: 37.5665, lng: 126.9780 },
+            zoom: 12,
+            mapTypeControl: true,
+            fullscreenControl: true,
+            streetViewControl: false,
+            styles: [
+                {
+                    featureType: 'poi',
+                    elementType: 'labels',
+                    stylers: [{ visibility: 'on' }]
+                }
+            ]
+        });
 
-    // 차트 초기화
-    initCharts();
+        // 서비스 초기화
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: false,
+            polylineOptions: {
+                strokeColor: '#2563eb',
+                strokeWeight: 5,
+                strokeOpacity: 0.8
+            }
+        });
+        placesService = new google.maps.places.PlacesService(map);
+        geocoder = new google.maps.Geocoder();
 
-    console.log('TripSync 앱이 초기화되었습니다.');
+        // 이벤트 리스너 설정
+        setupEventListeners();
+
+        // 차트 초기화
+        initCharts();
+
+        // 로딩 인디케이터 숨기기
+        const loadingElement = document.getElementById('map-loading');
+        if (loadingElement) {
+            setTimeout(() => {
+                loadingElement.style.opacity = '0';
+                loadingElement.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    loadingElement.remove();
+                }, 500);
+            }, 500);
+        }
+
+        console.log('✓ Google Maps가 성공적으로 로드되었습니다.');
+        showNotification('지도가 준비되었습니다!', 'success');
+
+    } catch (error) {
+        console.error('Google Maps 초기화 오류:', error);
+        const loadingElement = document.getElementById('map-loading');
+        if (loadingElement) {
+            loadingElement.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 15px;"></i>
+                <p style="color: #ef4444; font-weight: bold;">지도 로드 실패</p>
+                <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    새로고침
+                </button>
+            `;
+        }
+        showNotification('지도 로드에 실패했습니다. 페이지를 새로고침해주세요.', 'error');
+    }
 }
+
+// Google Maps 콜백을 전역으로 노출
+window.initMap = initMap;
 
 // 이벤트 리스너 설정
 function setupEventListeners() {

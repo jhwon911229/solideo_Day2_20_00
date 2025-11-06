@@ -112,7 +112,12 @@
 
                     <!-- 지도 패널 -->
                     <div class="map-panel">
-                        <div id="map" class="map"></div>
+                        <div id="map" class="map">
+                            <div id="map-loading" class="map-loading">
+                                <div class="loader"></div>
+                                <p>구글맵스를 로드하는 중...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -282,13 +287,32 @@
         </div>
     </footer>
 
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMGooquPgD4C4lNL9sEdKr--2DTCr8djk&libraries=places,geometry&callback=initMap" async defer></script>
+    <!-- Google Maps API 에러 처리 -->
+    <script>
+        // Google Maps API 로드 에러 처리
+        function gm_authFailure() {
+            console.error('Google Maps API 인증 실패');
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 40px; text-align: center; background: #f3f4f6;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;"></i>
+                        <h3 style="color: #1f2937; margin-bottom: 10px;">Google Maps API 연결 오류</h3>
+                        <p style="color: #6b7280;">API 키를 확인하거나 페이지를 새로고침해주세요.</p>
+                    </div>
+                `;
+            }
+        }
+        window.gm_authFailure = gm_authFailure;
+    </script>
 
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- App JavaScript -->
     <script src="app.js"></script>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMGooquPgD4C4lNL9sEdKr--2DTCr8djk&libraries=places,geometry&callback=initMap" async defer onerror="gm_authFailure()"></script>
 </body>
 </html>
