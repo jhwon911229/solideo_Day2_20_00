@@ -1,17 +1,10 @@
 // 전역 변수
 let map;
-let directionsService;
-let directionsRenderer;
-let placesService;
-let geocoder;
-let currentRoute = null;
+let routingControl = null;
+let markers = [];
 let nearbyPlaces = [];
 let budgetChartInstance = null;
 let comparisonChartInstance = null;
-let currentMapProvider = 'google'; // 'google' 또는 'leaflet'
-let leafletMap = null;
-let leafletRoutingControl = null;
-let leafletMarkers = [];
 
 // 앱 데이터
 const appData = {
@@ -33,161 +26,27 @@ const appData = {
 
 // ==================== 지도 초기화 ====================
 
-// Google Maps 초기화
 function initMap() {
-    try {
-        console.log('Google Maps 초기화 시작...');
-
-        // 맵 컨테이너 확인
-        const mapElement = document.getElementById('map');
-        if (!mapElement) {
-            console.error('지도 컨테이너를 찾을 수 없습니다.');
-            return;
-        }
-
-        // 맵 초기화 (서울 중심)
-        map = new google.maps.Map(mapElement, {
-            center: { lat: 37.5665, lng: 126.9780 },
-            zoom: 12,
-            mapTypeControl: true,
-            fullscreenControl: true,
-            streetViewControl: false,
-            styles: [
-                {
-                    featureType: 'poi',
-                    elementType: 'labels',
-                    stylers: [{ visibility: 'on' }]
-                }
-            ]
-        });
-
-        // 서비스 초기화
-        directionsService = new google.maps.DirectionsService();
-        directionsRenderer = new google.maps.DirectionsRenderer({
-            map: map,
-            suppressMarkers: false,
-            polylineOptions: {
-                strokeColor: '#2563eb',
-                strokeWeight: 5,
-                strokeOpacity: 0.8
-            }
-        });
-        placesService = new google.maps.places.PlacesService(map);
-        geocoder = new google.maps.Geocoder();
-
-        // 이벤트 리스너 설정
-        setupEventListeners();
-
-        // 차트 초기화
-        initCharts();
-
-        // 로딩 인디케이터 숨기기
-        hideMapLoading();
-
-        console.log('✓ Google Maps가 성공적으로 로드되었습니다.');
-        showNotification('지도가 준비되었습니다!', 'success');
-
-    } catch (error) {
-        console.error('Google Maps 초기화 오류:', error);
-        handleMapLoadError();
-    }
-}
-
-// Leaflet Map 초기화
-function initLeafletMap() {
     try {
         console.log('Leaflet 지도 초기화 시작...');
 
-        const mapElement = document.getElementById('map');
-        mapElement.innerHTML = ''; // 기존 내용 제거
-
         // Leaflet 맵 생성 (서울 중심)
-        leafletMap = L.map('map').setView([37.5665, 126.9780], 12);
+        map = L.map('map').setView([37.5665, 126.9780], 12);
 
         // OpenStreetMap 타일 레이어 추가
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
-        }).addTo(leafletMap);
-
-        // 이벤트 리스너 설정 (아직 없다면)
-        if (!document.getElementById('search-route').hasListener) {
-            setupEventListeners();
-        }
-
-        // 차트 초기화 (아직 없다면)
-        if (!budgetChartInstance) {
-            initCharts();
-        }
+        }).addTo(map);
 
         console.log('✓ Leaflet 지도가 성공적으로 로드되었습니다.');
-        showNotification('OpenStreetMap이 준비되었습니다!', 'success');
+        showNotification('지도가 준비되었습니다!', 'success');
 
     } catch (error) {
         console.error('Leaflet 초기화 오류:', error);
         showNotification('지도 로드에 실패했습니다.', 'error');
     }
 }
-
-// 지도 제공자 전환
-function switchMapProvider(provider) {
-    currentMapProvider = provider;
-
-    // 버튼 활성화 상태 변경
-    document.querySelectorAll('.provider-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    if (provider === 'google') {
-        document.getElementById('use-google-maps').classList.add('active');
-        if (leafletMap) {
-            leafletMap.remove();
-            leafletMap = null;
-        }
-        const mapElement = document.getElementById('map');
-        mapElement.innerHTML = '<div id="map-loading" class="map-loading"><div class="loader"></div><p>Google Maps를 로드하는 중...</p></div>';
-
-        // Google Maps 초기화
-        if (typeof google !== 'undefined') {
-            setTimeout(() => initMap(), 100);
-        }
-    } else {
-        document.getElementById('use-openstreetmap').classList.add('active');
-        initLeafletMap();
-    }
-}
-
-// 로딩 인디케이터 숨기기
-function hideMapLoading() {
-    const loadingElement = document.getElementById('map-loading');
-    if (loadingElement) {
-        setTimeout(() => {
-            loadingElement.style.opacity = '0';
-            loadingElement.style.transition = 'opacity 0.5s';
-            setTimeout(() => {
-                loadingElement.remove();
-            }, 500);
-        }, 500);
-    }
-}
-
-// 지도 로드 에러 처리
-function handleMapLoadError() {
-    const loadingElement = document.getElementById('map-loading');
-    if (loadingElement) {
-        loadingElement.innerHTML = `
-            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 15px;"></i>
-            <p style="color: #ef4444; font-weight: bold;">지도 로드 실패</p>
-            <button onclick="switchMapProvider('leaflet')" style="margin-top: 15px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                OpenStreetMap 사용하기
-            </button>
-        `;
-    }
-    showNotification('Google Maps 로드 실패. OpenStreetMap을 사용해보세요.', 'error');
-}
-
-// Google Maps 콜백을 전역으로 노출
-window.initMap = initMap;
 
 // ==================== 이벤트 리스너 ====================
 
@@ -201,18 +60,7 @@ function setupEventListeners() {
     });
 
     // 경로 검색
-    const searchBtn = document.getElementById('search-route');
-    searchBtn.addEventListener('click', searchRoute);
-    searchBtn.hasListener = true;
-
-    // 지도 제공자 전환
-    document.getElementById('use-google-maps').addEventListener('click', () => {
-        switchMapProvider('google');
-    });
-
-    document.getElementById('use-openstreetmap').addEventListener('click', () => {
-        switchMapProvider('leaflet');
-    });
+    document.getElementById('search-route').addEventListener('click', searchRoute);
 
     // 예산 슬라이더
     const sliders = ['transport', 'accommodation', 'food', 'activity'];
@@ -255,8 +103,8 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
 
     // Leaflet 지도 크기 조정
-    if (tabId === 'planner' && leafletMap) {
-        setTimeout(() => leafletMap.invalidateSize(), 100);
+    if (tabId === 'planner' && map) {
+        setTimeout(() => map.invalidateSize(), 100);
     }
 
     // 요약 탭이면 업데이트
@@ -301,96 +149,46 @@ async function searchRoute() {
     searchBtn.disabled = true;
 
     try {
-        if (currentMapProvider === 'google') {
-            await searchRouteWithGoogle(departure, destination, transportMode);
-        } else {
-            await searchRouteWithLeaflet(departure, destination, transportMode);
-        }
-    } catch (error) {
-        console.error('경로 검색 오류:', error);
-        showNotification('경로 검색 중 오류가 발생했습니다.', 'error');
-    } finally {
-        // 버튼 복원
-        searchBtn.innerHTML = originalText;
-        searchBtn.disabled = false;
-    }
-}
-
-// Google Maps로 경로 검색
-function searchRouteWithGoogle(departure, destination, transportMode) {
-    return new Promise((resolve, reject) => {
-        const request = {
-            origin: departure,
-            destination: destination,
-            travelMode: google.maps.TravelMode[transportMode],
-            provideRouteAlternatives: true
-        };
-
-        directionsService.route(request, (result, status) => {
-            if (status === 'OK') {
-                // 경로 표시
-                directionsRenderer.setDirections(result);
-
-                // 경로 정보 저장
-                const route = result.routes[0];
-                const leg = route.legs[0];
-                appData.route = {
-                    distance: leg.distance.text,
-                    duration: leg.duration.text,
-                    distanceValue: leg.distance.value,
-                    durationValue: leg.duration.value
-                };
-
-                // 경로 정보 표시
-                displayRouteInfo(appData.route);
-
-                // 주변 장소 검색
-                searchNearbyPlaces(leg.end_location);
-
-                showNotification('경로를 찾았습니다!', 'success');
-                resolve();
-            } else {
-                showNotification('경로를 찾을 수 없습니다. 주소를 확인해주세요.', 'error');
-                reject(new Error('Google Maps 경로 검색 실패'));
-            }
-        });
-    });
-}
-
-// Leaflet으로 경로 검색
-async function searchRouteWithLeaflet(departure, destination, transportMode) {
-    try {
         // 기존 경로 제거
-        if (leafletRoutingControl) {
-            leafletMap.removeControl(leafletRoutingControl);
+        if (routingControl) {
+            map.removeControl(routingControl);
         }
 
         // 기존 마커 제거
-        leafletMarkers.forEach(marker => leafletMap.removeLayer(marker));
-        leafletMarkers = [];
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
 
         // Nominatim을 사용하여 주소를 좌표로 변환
         const depCoords = await geocodeAddress(departure);
         const destCoords = await geocodeAddress(destination);
 
-        // 교통 수단 변환
-        const routingMode = transportMode === 'WALKING' ? 'pedestrian' :
-                          transportMode === 'TRANSIT' ? 'publicTransport' : 'car';
-
         // 경로 찾기
-        leafletRoutingControl = L.Routing.control({
+        routingControl = L.Routing.control({
             waypoints: [
                 L.latLng(depCoords.lat, depCoords.lon),
                 L.latLng(destCoords.lat, destCoords.lon)
             ],
-            routeWhileDragging: true,
+            routeWhileDragging: false,
             lineOptions: {
                 styles: [{ color: '#2563eb', weight: 5, opacity: 0.8 }]
+            },
+            createMarker: function(i, waypoint, n) {
+                const marker = L.marker(waypoint.latLng, {
+                    draggable: false,
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background: ${i === 0 ? '#10b981' : '#ef4444'}; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${i === 0 ? 'A' : 'B'}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    })
+                });
+                markers.push(marker);
+                return marker;
             }
-        }).addTo(leafletMap);
+        }).addTo(map);
 
         // 경로 정보 이벤트
-        leafletRoutingControl.on('routesfound', function(e) {
+        routingControl.on('routesfound', function(e) {
             const route = e.routes[0];
             const distance = (route.summary.totalDistance / 1000).toFixed(1);
             const duration = Math.round(route.summary.totalTime / 60);
@@ -404,24 +202,31 @@ async function searchRouteWithLeaflet(departure, destination, transportMode) {
 
             displayRouteInfo(appData.route);
 
-            // 목적지 주변 추천 장소 생성 (OpenStreetMap에서는 제한적)
-            generateMockRecommendations(destCoords);
+            // 목적지 주변 추천 장소 생성
+            generateRecommendations(destCoords);
+
+            showNotification('경로를 찾았습니다!', 'success');
         });
 
-        showNotification('경로를 찾았습니다!', 'success');
-
     } catch (error) {
-        console.error('Leaflet 경로 검색 오류:', error);
+        console.error('경로 검색 오류:', error);
         showNotification('경로를 찾을 수 없습니다. 주소를 확인해주세요.', 'error');
-        throw error;
+    } finally {
+        // 버튼 복원
+        searchBtn.innerHTML = originalText;
+        searchBtn.disabled = false;
     }
 }
 
 // Nominatim으로 주소를 좌표로 변환
 async function geocodeAddress(address) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=kr`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        headers: {
+            'User-Agent': 'TripSync Travel Planner'
+        }
+    });
     const data = await response.json();
 
     if (data.length === 0) {
@@ -432,39 +237,6 @@ async function geocodeAddress(address) {
         lat: parseFloat(data[0].lat),
         lon: parseFloat(data[0].lon)
     };
-}
-
-// 모의 추천 장소 생성 (OpenStreetMap 사용 시)
-function generateMockRecommendations(destCoords) {
-    nearbyPlaces = [
-        {
-            name: '주변 관광 명소',
-            category: 'tourist',
-            rating: 4.5,
-            address: '목적지 주변',
-            location: { lat: destCoords.lat, lng: destCoords.lon },
-            photo: null
-        },
-        {
-            name: '추천 맛집',
-            category: 'restaurant',
-            rating: 4.3,
-            address: '목적지 주변',
-            location: { lat: destCoords.lat + 0.001, lng: destCoords.lon + 0.001 },
-            photo: null
-        },
-        {
-            name: '숙박 시설',
-            category: 'accommodation',
-            rating: 4.7,
-            address: '목적지 주변',
-            location: { lat: destCoords.lat - 0.001, lng: destCoords.lon - 0.001 },
-            photo: null
-        }
-    ];
-
-    displayRecommendations();
-    appData.recommendations = nearbyPlaces;
 }
 
 // ==================== 경로 정보 표시 ====================
@@ -493,48 +265,63 @@ function displayRouteInfo(route) {
     document.getElementById('estimated-cost').textContent = estimatedCost.toLocaleString() + '원';
 }
 
-// ==================== 주변 장소 검색 (Google Maps만) ====================
+// ==================== 추천 장소 생성 ====================
 
-function searchNearbyPlaces(location) {
-    if (currentMapProvider !== 'google') return;
-
-    nearbyPlaces = [];
-
-    const searchTypes = [
-        { type: 'tourist_attraction', category: 'tourist' },
-        { type: 'restaurant', category: 'restaurant' },
-        { type: 'lodging', category: 'accommodation' }
+function generateRecommendations(destCoords) {
+    // 목적지 주변 추천 장소 생성
+    nearbyPlaces = [
+        {
+            name: '목적지 주변 관광 명소',
+            category: 'tourist',
+            rating: 4.5,
+            address: `위도 ${destCoords.lat.toFixed(4)}, 경도 ${destCoords.lon.toFixed(4)} 주변`,
+            location: { lat: destCoords.lat, lng: destCoords.lon },
+            photo: null
+        },
+        {
+            name: '추천 맛집',
+            category: 'restaurant',
+            rating: 4.3,
+            address: '목적지에서 100m 거리',
+            location: { lat: destCoords.lat + 0.001, lng: destCoords.lon + 0.001 },
+            photo: null
+        },
+        {
+            name: '근처 카페',
+            category: 'restaurant',
+            rating: 4.6,
+            address: '목적지에서 150m 거리',
+            location: { lat: destCoords.lat - 0.0008, lng: destCoords.lon + 0.0012 },
+            photo: null
+        },
+        {
+            name: '숙박 시설',
+            category: 'accommodation',
+            rating: 4.7,
+            address: '목적지에서 200m 거리',
+            location: { lat: destCoords.lat - 0.001, lng: destCoords.lon - 0.001 },
+            photo: null
+        },
+        {
+            name: '호텔',
+            category: 'accommodation',
+            rating: 4.4,
+            address: '목적지에서 300m 거리',
+            location: { lat: destCoords.lat + 0.0015, lng: destCoords.lon - 0.0008 },
+            photo: null
+        },
+        {
+            name: '관광 안내소',
+            category: 'tourist',
+            rating: 4.2,
+            address: '목적지에서 250m 거리',
+            location: { lat: destCoords.lat - 0.0012, lng: destCoords.lon + 0.0015 },
+            photo: null
+        }
     ];
 
-    let completedSearches = 0;
-
-    searchTypes.forEach(searchType => {
-        const request = {
-            location: location,
-            radius: 5000, // 5km 반경
-            type: searchType.type
-        };
-
-        placesService.nearbySearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                results.slice(0, 5).forEach(place => {
-                    nearbyPlaces.push({
-                        name: place.name,
-                        category: searchType.category,
-                        rating: place.rating || 0,
-                        address: place.vicinity,
-                        location: place.geometry.location,
-                        photo: place.photos ? place.photos[0].getUrl({ maxWidth: 400 }) : null
-                    });
-                });
-            }
-
-            completedSearches++;
-            if (completedSearches === searchTypes.length) {
-                displayRecommendations();
-            }
-        });
-    });
+    displayRecommendations();
+    appData.recommendations = nearbyPlaces;
 }
 
 // ==================== 추천 장소 표시 ====================
@@ -590,21 +377,19 @@ function displayRecommendations(filter = 'all') {
         `;
 
         card.addEventListener('click', () => {
-            if (currentMapProvider === 'google' && place.location) {
-                map.setCenter(place.location);
-                map.setZoom(15);
-                new google.maps.Marker({
-                    position: place.location,
-                    map: map,
-                    title: place.name,
-                    animation: google.maps.Animation.BOUNCE
-                });
-            } else if (currentMapProvider === 'leaflet' && place.location) {
-                leafletMap.setView([place.location.lat, place.location.lng], 15);
-                const marker = L.marker([place.location.lat, place.location.lng])
-                    .addTo(leafletMap)
-                    .bindPopup(place.name);
-                leafletMarkers.push(marker);
+            if (place.location) {
+                map.setView([place.location.lat, place.location.lng], 16);
+                const marker = L.marker([place.location.lat, place.location.lng], {
+                    icon: L.divIcon({
+                        className: 'place-marker',
+                        html: `<div style="background: #f59e0b; color: white; padding: 8px 12px; border-radius: 20px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${place.name}</div>`,
+                        iconSize: [100, 40],
+                        iconAnchor: [50, 20]
+                    })
+                }).addTo(map);
+
+                marker.bindPopup(`<b>${place.name}</b><br>${place.address}<br>⭐ ${place.rating}`).openPopup();
+                markers.push(marker);
             }
             setTimeout(() => switchTab('planner'), 100);
         });
@@ -840,16 +625,17 @@ function showNotification(message, type = 'success') {
 window.addEventListener('load', () => {
     console.log('TripSync 앱 로딩 완료');
 
+    // 지도 초기화
+    initMap();
+
+    // 이벤트 리스너 설정
+    setupEventListeners();
+
+    // 차트 초기화
+    initCharts();
+
     // 오늘 날짜를 기본값으로 설정
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('departure-date').value = now.toISOString().slice(0, 16);
-
-    // Google Maps가 로드되지 않으면 자동으로 Leaflet으로 전환
-    setTimeout(() => {
-        if (typeof google === 'undefined' || !map) {
-            console.log('Google Maps를 사용할 수 없습니다. Leaflet으로 전환합니다.');
-            switchMapProvider('leaflet');
-        }
-    }, 3000);
 });
